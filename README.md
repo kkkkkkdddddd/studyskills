@@ -1,6 +1,6 @@
-# StudySkills
+# StudySkills（ a chinese study tool ）
 
-Two Claude Code skills for converting academic materials into beautifully formatted LaTeX PDF study guides.
+Two Claude Code skills for converting academic materials into beautifully formatted LaTeX PDF study guides.it mainly focus on turing studying materials in varises languages into chinese study assistant file but you can easily change the md file into other language
 
 ---
 
