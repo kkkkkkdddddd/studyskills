@@ -1,0 +1,364 @@
+\documentclass[11pt,a4paper]{article}
+\usepackage[UTF8]{ctex}
+\usepackage{amsmath, amssymb}
+\usepackage[dvipsnames]{xcolor}
+\usepackage[most]{tcolorbox}
+\usepackage{geometry}
+\geometry{a4paper, margin=2.5cm}
+\usepackage{titlesec}
+\usepackage[colorlinks=true, linkcolor=blue, urlcolor=blue]{hyperref}
+\usepackage{booktabs}
+\usepackage{array}
+
+% Colors
+\definecolor{knowledgeBlue}{RGB}{235, 245, 255}
+\definecolor{knowledgeBorder}{RGB}{41, 128, 185}
+\definecolor{summaryOrange}{RGB}{255, 245, 235}
+\definecolor{summaryBorder}{RGB}{230, 126, 34}
+
+% Knowledge Box
+\newtcolorbox{knowledgebox}[1][]{
+    enhanced, breakable, colback=knowledgeBlue, colframe=knowledgeBorder,
+    fonttitle=\bfseries\sffamily, title=#1, boxrule=1.2pt, arc=4pt,
+    left=10pt, right=10pt, top=8pt, bottom=8pt
+}
+
+% Summary Box
+\newtcolorbox{summarybox}[1][]{
+    enhanced, breakable, colback=summaryOrange, colframe=summaryBorder,
+    fonttitle=\bfseries\sffamily, title=#1, boxrule=1.2pt, arc=4pt,
+    left=10pt, right=10pt, top=8pt, bottom=8pt
+}
+
+\titleformat{\section}{\Large\bfseries\sffamily}{\thesection}{1em}{}
+\titleformat{\subsection}{\large\bfseries\sffamily}{\thesubsection}{1em}{}
+
+\title{\vspace{-1.5cm}\Huge{\textbf{Lecture 14 习题详细解答与总结}}\\\vspace{0.8cm}\large{Problem Sheet: Further on MCMC Methods\\Gibbs Sampling \& Trace Plots}}
+\author{}
+\date{}
+
+\begin{document}
+\maketitle
+\centerline{\rule{0.8\textwidth}{0.5pt}}
+\vspace{0.5cm}
+
+\noindent\textbf{题目来源}：Dr.\ Nivedita Viswanathan, \textit{Problem Sheet: Lecture 14 — Further on MCMC Methods: Gibbs Sampling \& Trace Plots}
+
+\noindent\textbf{核心考点}：Full Conditional 的推导技巧；离散 Gibbs Sampler 的手工执行。
+
+\vspace{0.5cm}
+
+% ============================================================
+\section*{Question 1：连续参数的 Full Conditional 推导}
+% ============================================================
+
+\subsection*{题目}
+
+两个未知参数 $\alpha$ 和 $\beta$ 的联合后验为
+$$p(\alpha, \beta | Y) \propto \exp\!\left(-\tfrac{1}{2}\!\left[\alpha^2 + \beta^2 + \frac{(\bar{y} - \alpha - \beta)^2}{\sigma^2}\right]\right)$$
+其中 $\alpha, \beta \in \mathbb{R}$，$\bar{y}$ 和 $\sigma^2$ 是已知常数。
+
+\medskip
+\textbf{变量解释}：
+\begin{itemize}
+    \item $\bar{y}$：观测数据的样本均值（已知常数），来自数据。
+    \item $\sigma^2$：观测数据的方差（已知常数），控制数据拟合项的权重——$\sigma^2$ 越小，$(\bar{y}-\alpha-\beta)^2$ 这一项在后验中的权重越大，后验越"相信数据"。
+    \item $\alpha^2 + \beta^2$ 项：来自先验 $p(\alpha,\beta) \propto e^{-\frac{1}{2}(\alpha^2+\beta^2)}$，等价于 $\alpha \sim N(0,1)$ 且 $\beta \sim N(0,1)$ 独立。
+\end{itemize}
+
+\subsection*{Part (a)：推导 $p(\alpha | \beta, Y)$}
+
+\textbf{核心原则}：$p(\alpha | \beta, Y) \propto p(\alpha, \beta | Y)$ 中固定 $\beta$，只保留含 $\alpha$ 的项。
+
+\medskip
+\textbf{Step 1}：写出含 $\alpha$ 的部分（固定 $\beta$，丢弃 $e^{-\frac{1}{2}\beta^2}$）：
+$$p(\alpha | \beta, Y) \propto \exp\!\left(-\tfrac{1}{2}\!\left[\alpha^2 + \frac{(\bar{y} - \alpha - \beta)^2}{\sigma^2}\right]\right)$$
+
+\textbf{Step 2}：对指数中的 $\alpha$ 配方。
+
+令 $\mu_\alpha = \bar{y} - \beta$（即已知 $\beta$ 时的"目标值"），则 $\bar{y} - \alpha - \beta = \mu_\alpha - \alpha$。展开指数内部：
+\begin{align*}
+\alpha^2 + \frac{(\mu_\alpha - \alpha)^2}{\sigma^2}
+&= \alpha^2 + \frac{\alpha^2 - 2\alpha\mu_\alpha + \mu_\alpha^2}{\sigma^2} \\[4pt]
+&= \alpha^2\!\left(1 + \frac{1}{\sigma^2}\right) - \frac{2\mu_\alpha}{\sigma^2}\alpha + \frac{\mu_\alpha^2}{\sigma^2}
+\end{align*}
+
+\textbf{Step 3}：配方成正态核 $-\frac{1}{2\tau^2}(\alpha - m)^2$ 的形式。
+
+正态分布 $N(m, \tau^2)$ 的核展开为：
+$$-\frac{1}{2\tau^2}(\alpha - m)^2 = -\frac{1}{2}\!\left[\frac{\alpha^2}{\tau^2} - \frac{2m\alpha}{\tau^2} + \frac{m^2}{\tau^2}\right]$$
+
+对比系数（忽略常数项 $\frac{\mu_\alpha^2}{\sigma^2}$，它不含 $\alpha$）：
+\begin{itemize}
+    \item $\alpha^2$ 的系数：$\dfrac{1}{\tau^2} = 1 + \dfrac{1}{\sigma^2} = \dfrac{\sigma^2 + 1}{\sigma^2}$
+
+    $\Rightarrow$ 后验方差 $\tau^2 = \dfrac{\sigma^2}{\sigma^2 + 1}$
+
+    \item $\alpha$ 的系数：$\dfrac{m}{\tau^2} = \dfrac{\mu_\alpha}{\sigma^2}$
+
+    $\Rightarrow$ 后验均值 $m = \dfrac{\mu_\alpha \tau^2}{\sigma^2} = \dfrac{(\bar{y}-\beta) \cdot \frac{\sigma^2}{\sigma^2+1}}{\sigma^2} = \dfrac{\bar{y} - \beta}{\sigma^2 + 1}$
+\end{itemize}
+
+\begin{center}
+\framebox[0.85\textwidth]{$\displaystyle \alpha | \beta, Y \sim \text{Normal}\!\left(\frac{\bar{y} - \beta}{\sigma^2 + 1},\; \frac{\sigma^2}{\sigma^2 + 1}\right)$}
+\end{center}
+
+\textbf{直觉检验}：
+\begin{itemize}
+    \item 若 $\sigma^2 \to 0$（数据非常精确）：均值 $\to \bar{y} - \beta$，方差 $\to 0$——后验完全由数据决定。
+    \item 若 $\sigma^2 \to \infty$（数据很噪声）：均值 $\to 0$，方差 $\to 1$——后验回到先验 $N(0,1)$。
+    \item 这正是\textbf{数据与先验的权衡}。
+\end{itemize}
+
+\subsection*{Part (b)：推导 $p(\beta | \alpha, Y)$}
+
+观察联合后验的指数：
+$$\alpha^2 + \beta^2 + \frac{(\bar{y} - \alpha - \beta)^2}{\sigma^2}$$
+将 $\alpha \leftrightarrow \beta$ 互换，表达式完全不变！即 $\alpha$ 和 $\beta$ 在联合后验中\textbf{完全对称}。
+
+因此，只需将 Part (a) 的答案中的 $\alpha \leftrightarrow \beta$ 互换：
+
+\begin{center}
+\framebox[0.85\textwidth]{$\displaystyle \beta | \alpha, Y \sim \text{Normal}\!\left(\frac{\bar{y} - \alpha}{\sigma^2 + 1},\; \frac{\sigma^2}{\sigma^2 + 1}\right)$}
+\end{center}
+
+\begin{knowledgebox}[Q1 知识点总结]
+\begin{itemize}
+    \item \textbf{Full Conditional 推导公式}：$p(\theta | \phi, Y) \propto \text{Joint Posterior 中固定 $\phi$ 后关于 $\theta$ 的部分}$。
+    \item \textbf{配方技巧}：将指数中的二次型 $\alpha^2 A - 2\alpha B + C$ 对比正态核 $\frac{1}{\tau^2}(\alpha - m)^2$，直接读出方差 $\tau^2 = 1/A$ 和均值 $m = B/A$。
+    \item \textbf{对称性简化}：若联合后验中两个变量地位对称，只需推导一个，另一个直接互换。
+    \item \textbf{Normal-Normal 共轭}：正态先验 + 正态似然 $\Rightarrow$ 正态 full conditional，每一步可精确采样。
+\end{itemize}
+\end{knowledgebox}
+
+\vspace{0.5cm}
+
+% ============================================================
+\section*{Question 2：离散联合分布的 Gibbs Sampler}
+% ============================================================
+
+\subsection*{题目}
+
+两个离散随机变量 $X$ 和 $Y$ 的联合分布：
+\begin{center}
+\begin{tabular}{c|ccc}
+$p(X,Y)$ & $Y=1$ & $Y=2$ & $Y=3$ \\
+\hline
+$X=1$ & 0.10 & 0.05 & 0.05 \\
+$X=2$ & 0.10 & 0.20 & 0.10 \\
+$X=3$ & 0.05 & 0.10 & 0.25
+\end{tabular}
+\end{center}
+
+Gibbs sampler 交替采样：$X^{(t+1)} \sim p(X | Y = y^{(t)})$ 和 $Y^{(t+1)} \sim p(Y | X = x^{(t+1)})$。
+
+\subsection*{Part (a)：边际分布 $p(X=x)$ 和 $p(Y=y)$}
+
+\textbf{方法}：边际 = 对另一变量求和。$p(X=x) = \sum_{y=1}^{3} p(X\!=\!x, Y\!=\!y)$，同理 $p(Y=y)$。
+
+\medskip
+\textbf{计算 $p(X=x)$}（按行求和）：
+\begin{align*}
+p(X=1) &= 0.10 + 0.05 + 0.05 = 0.20 \\
+p(X=2) &= 0.10 + 0.20 + 0.10 = 0.40 \\
+p(X=3) &= 0.05 + 0.10 + 0.25 = 0.40
+\end{align*}
+
+\textbf{计算 $p(Y=y)$}（按列求和）：
+\begin{align*}
+p(Y=1) &= 0.10 + 0.10 + 0.05 = 0.25 \\
+p(Y=2) &= 0.05 + 0.20 + 0.10 = 0.35 \\
+p(Y=3) &= 0.05 + 0.10 + 0.25 = 0.40
+\end{align*}
+
+\textbf{验证}：$0.20 + 0.40 + 0.40 = 1.00$，$0.25 + 0.35 + 0.40 = 1.00$。
+
+\begin{center}
+\begin{tabular}{c|ccc|c}
+$p(X,Y)$ & $Y\!=\!1$ & $Y\!=\!2$ & $Y\!=\!3$ & $p(X)$ \\
+\hline
+$X\!=\!1$ & 0.10 & 0.05 & 0.05 & \textbf{0.20} \\
+$X\!=\!2$ & 0.10 & 0.20 & 0.10 & \textbf{0.40} \\
+$X\!=\!3$ & 0.05 & 0.10 & 0.25 & \textbf{0.40} \\
+\hline
+$p(Y)$ & \textbf{0.25} & \textbf{0.35} & \textbf{0.40} & 1.00
+\end{tabular}
+\end{center}
+
+\subsection*{Part (b)：Full Conditional $p(X | Y = y)$}
+
+\textbf{公式}：$p(X\!=\!x | Y\!=\!y) = \dfrac{p(X\!=\!x, Y\!=\!y)}{p(Y\!=\!y)}$
+
+\medskip
+\textbf{$Y = 1$ 时}（$p(Y\!=\!1) = 0.25$）：
+\begin{align*}
+p(X\!=\!1 | Y\!=\!1) &= 0.10 / 0.25 = 0.40 \\
+p(X\!=\!2 | Y\!=\!1) &= 0.10 / 0.25 = 0.40 \\
+p(X\!=\!3 | Y\!=\!1) &= 0.05 / 0.25 = 0.20
+\end{align*}
+\textbf{验证}：$0.40 + 0.40 + 0.20 = 1.00$。
+
+\textbf{$Y = 2$ 时}（$p(Y\!=\!2) = 0.35$）：
+\begin{align*}
+p(X\!=\!1 | Y\!=\!2) &= 0.05 / 0.35 = 1/7 \approx 0.143 \\
+p(X\!=\!2 | Y\!=\!2) &= 0.20 / 0.35 = 4/7 \approx 0.571 \\
+p(X\!=\!3 | Y\!=\!2) &= 0.10 / 0.35 = 2/7 \approx 0.286
+\end{align*}
+\textbf{验证}：$1/7 + 4/7 + 2/7 = 1$。
+
+\textbf{$Y = 3$ 时}（$p(Y\!=\!3) = 0.40$）：
+\begin{align*}
+p(X\!=\!1 | Y\!=\!3) &= 0.05 / 0.40 = 0.125 \\
+p(X\!=\!2 | Y\!=\!3) &= 0.10 / 0.40 = 0.250 \\
+p(X\!=\!3 | Y\!=\!3) &= 0.25 / 0.40 = 0.625
+\end{align*}
+\textbf{验证}：$0.125 + 0.250 + 0.625 = 1.000$。
+
+\begin{center}
+\begin{tabular}{c|ccc}
+$p(X|Y\!=\!1)$ & $X\!=\!1$: 0.40 & $X\!=\!2$: 0.40 & $X\!=\!3$: 0.20 \\
+$p(X|Y\!=\!2)$ & $X\!=\!1$: 1/7 & $X\!=\!2$: 4/7 & $X\!=\!3$: 2/7 \\
+$p(X|Y\!=\!3)$ & $X\!=\!1$: 0.125 & $X\!=\!2$: 0.250 & $X\!=\!3$: 0.625
+\end{tabular}
+\end{center}
+
+\subsection*{Part (c)：Full Conditional $p(Y | X = x)$}
+
+\textbf{公式}：$p(Y\!=\!y | X\!=\!x) = \dfrac{p(X\!=\!x, Y\!=\!y)}{p(X\!=\!x)}$
+
+\medskip
+\textbf{$X = 1$ 时}（$p(X\!=\!1) = 0.20$）：
+\begin{align*}
+p(Y\!=\!1 | X\!=\!1) &= 0.10 / 0.20 = 0.50 \\
+p(Y\!=\!2 | X\!=\!1) &= 0.05 / 0.20 = 0.25 \\
+p(Y\!=\!3 | X\!=\!1) &= 0.05 / 0.20 = 0.25
+\end{align*}
+
+\textbf{$X = 2$ 时}（$p(X\!=\!2) = 0.40$）：
+\begin{align*}
+p(Y\!=\!1 | X\!=\!2) &= 0.10 / 0.40 = 0.25 \\
+p(Y\!=\!2 | X\!=\!2) &= 0.20 / 0.40 = 0.50 \\
+p(Y\!=\!3 | X\!=\!2) &= 0.10 / 0.40 = 0.25
+\end{align*}
+
+\textbf{$X = 3$ 时}（$p(X\!=\!3) = 0.40$）：
+\begin{align*}
+p(Y\!=\!1 | X\!=\!3) &= 0.05 / 0.40 = 0.125 \\
+p(Y\!=\!2 | X\!=\!3) &= 0.10 / 0.40 = 0.250 \\
+p(Y\!=\!3 | X\!=\!3) &= 0.25 / 0.40 = 0.625
+\end{align*}
+
+\begin{center}
+\begin{tabular}{c|ccc}
+$p(Y|X\!=\!1)$ & $Y\!=\!1$: 0.50 & $Y\!=\!2$: 0.25 & $Y\!=\!3$: 0.25 \\
+$p(Y|X\!=\!2)$ & $Y\!=\!1$: 0.25 & $Y\!=\!2$: 0.50 & $Y\!=\!3$: 0.25 \\
+$p(Y|X\!=\!3)$ & $Y\!=\!1$: 0.125 & $Y\!=\!2$: 0.250 & $Y\!=\!3$: 0.625
+\end{tabular}
+\end{center}
+
+\subsection*{Part (d)：Mode Gibbs Sampler 轨迹}
+
+\textbf{规则}：每次不随机抽样，而是取条件分布的\textbf{众数（mode，概率最大的值）}。若有并列，取较小值。
+
+\medskip
+\textbf{初始化}：$(X^{(0)}, Y^{(0)}) = (1, 1)$。
+
+\bigskip
+\textbf{$t = 1$}：
+
+\begin{enumerate}[leftmargin=2em]
+    \item \textbf{固定 $Y^{(0)} = 1$，从 $p(X | Y\!=\!1)$ 采样}：
+
+    $P(X\!=\!1|Y\!=\!1) = 0.40$，$P(X\!=\!2|Y\!=\!1) = 0.40$，$P(X\!=\!3|Y\!=\!1) = 0.20$
+
+    Mode：$X=1$ 和 $X=2$ 并列（同为 0.40）。取较小值 $\Rightarrow$ $\boldsymbol{X^{(1)} = 1}$。
+
+    \item \textbf{固定 $X^{(1)} = 1$，从 $p(Y | X\!=\!1)$ 采样}：
+
+    $P(Y\!=\!1|X\!=\!1) = 0.50$，$P(Y\!=\!2|X\!=\!1) = 0.25$，$P(Y\!=\!3|X\!=\!1) = 0.25$
+
+    Mode：$Y=1$（概率 0.50 最大）$\Rightarrow$ $\boldsymbol{Y^{(1)} = 1}$。
+\end{enumerate}
+
+\textbf{$t = 2$}：
+
+\begin{enumerate}[leftmargin=2em]
+    \item \textbf{固定 $Y^{(1)} = 1$，从 $p(X | Y\!=\!1)$ 采样}：
+
+    同 $t=1$，Mode 为 $X=1$ 或 $X=2$ 并列。取较小值 $\Rightarrow$ $\boldsymbol{X^{(2)} = 1}$。
+
+    \item \textbf{固定 $X^{(2)} = 1$，从 $p(Y | X\!=\!1)$ 采样}：
+
+    同 $t=1$，Mode 为 $Y=1$ $\Rightarrow$ $\boldsymbol{Y^{(2)} = 1}$。
+\end{enumerate}
+
+\begin{center}
+\framebox[0.85\textwidth]{$(X^{(0)}, Y^{(0)}) = (1,1) \;\to\; (X^{(1)}, Y^{(1)}) = (1,1) \;\to\; (X^{(2)}, Y^{(2)}) = (1,1)$}
+\end{center}
+
+\textbf{分析}：链被卡在 $(1,1)$！
+
+\begin{itemize}
+    \item $(1,1)$ 的联合概率 $p(X\!=\!1, Y\!=\!1) = 0.10$，远低于联合最大值 $p(X\!=\!3, Y\!=\!3) = 0.25$。
+    \item 但是 $p(X\!=\!1 | Y\!=\!1) = 0.40$ 的 mode 是 $X=1$（并列），$p(Y\!=\!1 | X\!=\!1) = 0.50$ 的 mode 是 $Y=1$。
+    \item 因此 $(1,1)$ 形成了一个\textbf{自循环陷阱}——条件 mode 交汇于此。
+    \item \textbf{结论}：Mode Gibbs sampler 探索的是条件 mode 的交汇区域，不一定是联合分布的高概率区域。这正是为什么要用\textbf{随机抽样}（而非取 mode）的原因！
+\end{itemize}
+
+\begin{knowledgebox}[Q2 知识点总结]
+\begin{itemize}
+    \item \textbf{边际分布计算}：行求和得 $p(X)$，列求和得 $p(Y)$。
+    \item \textbf{条件分布公式}：$p(X|Y) = p(X,Y) / p(Y)$，联合除以分母变量的边际。
+    \item \textbf{Gibbs Sampler 手工执行}：交替查表——先查 $p(X|Y)$ 得 $X^{(t+1)}$，再查 $p(Y|X^{(t+1)})$ 得 $Y^{(t+1)}$。
+    \item \textbf{Mode 采样的缺陷}：链可能卡在条件 mode 的交汇点（即使该点不是联合分布的高概率区域）。随机采样可避免此问题。
+    \item \textbf{并列处理}：若 mode 并列，通常取较小值（或任意指定规则）。
+\end{itemize}
+\end{knowledgebox}
+
+\vspace{0.5cm}
+
+% ============================================================
+% Global Summary
+% ============================================================
+
+\begin{summarybox}[总总结 (Global Summary)]
+\textbf{本套题覆盖的核心知识体系}：
+
+\medskip
+\textbf{1. Full Conditional 的万能推导法}：
+$$\boxed{p(\theta | \phi, Y) \propto \text{Joint Posterior 中固定 $\phi$ 后关于 $\theta$ 的部分}}$$
+\begin{itemize}
+    \item 连续情况：配方成标准分布核（如正态核 $e^{-\frac{(x-\mu)^2}{2\sigma^2}}$、Gamma 核 $x^{k-1}e^{-\theta x}$）。
+    \item 离散情况：直接查联合表，除以边际概率得到条件概率表。
+\end{itemize}
+
+\textbf{2. 两大题型对比}：
+\begin{center}
+\begin{tabular}{l p{5cm} p{5cm}}
+\toprule
+& \textbf{Q1（连续）} & \textbf{Q2（离散）} \\
+\midrule
+参数 & $\alpha, \beta \in \mathbb{R}$ & $X, Y \in \{1,2,3\}$ \\
+Full Conditional & 正态分布（解析配方） & 概率表（查表除法） \\
+采样 & 从 $N(m, \tau^2)$ 随机抽取 & 查表按概率抽取 \\
+共轭性 & Normal-Normal 共轭 & 不适用 \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\textbf{3. Gibbs Sampling 的核心逻辑}：
+\begin{itemize}
+    \item 多参数 $\Rightarrow$ 逐个采样，保持其他固定。
+    \item 每步只需知道一个 full conditional，而非整个联合后验。
+    \item 若 full conditional 是标准分布（如本题的正态或 Gamma），直接精确采样，无需 M-H 接受/拒绝。
+    \item 收敛后，链的样本分布近似联合后验。
+\end{itemize}
+
+\textbf{4. Mode vs.\ 随机采样}：Mode 采样可能卡在局部（Q2 Part d 的教训），实际中应使用随机采样。
+
+\textbf{5. 配方技巧（连续场景的万金油）}：
+$$\alpha^2 A - 2\alpha B + C \quad\Rightarrow\quad \tau^2 = \frac{1}{A}, \quad m = \frac{B}{A}$$
+识别正态核后，方差和均值一步到位。
+\end{summarybox}
+
+\end{document}

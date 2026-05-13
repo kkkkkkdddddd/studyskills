@@ -1,0 +1,485 @@
+\documentclass[11pt,a4paper]{article}
+\usepackage[UTF8]{ctex}
+\usepackage[dvipsnames]{xcolor}
+\usepackage[most]{tcolorbox}
+\usepackage{geometry}
+\geometry{a4paper, margin=2.5cm}
+\usepackage{titlesec}
+\usepackage[colorlinks=true, linkcolor=blue, urlcolor=blue]{hyperref}
+\usepackage{graphicx}
+\usepackage{tikz}
+
+% Colors
+\definecolor{conclusionBlue}{RGB}{235, 245, 255}
+\definecolor{conclusionBorder}{RGB}{41, 128, 185}
+\definecolor{stepOrange}{RGB}{255, 245, 235}
+\definecolor{stepBorder}{RGB}{230, 126, 34}
+\definecolor{exampleGreen}{RGB}{235, 255, 240}
+\definecolor{exampleBorder}{RGB}{46, 204, 113}
+
+% Blue box (Concepts, Conclusions)
+\newtcolorbox{bluebox}[1][]{
+    enhanced, breakable, colback=conclusionBlue, colframe=conclusionBorder,
+    fonttitle=\bfseries\sffamily, title=#1, boxrule=1.2pt, arc=4pt,
+    left=10pt, right=10pt, top=8pt, bottom=8pt
+}
+
+% Orange box (Steps, Workflows, Questions)
+\newtcolorbox{orangebox}[1][]{
+    enhanced, breakable, colback=stepOrange, colframe=stepBorder,
+    fonttitle=\bfseries\sffamily, title=#1, boxrule=1.2pt, arc=4pt,
+    left=10pt, right=10pt, top=8pt, bottom=8pt
+}
+
+% Green box (Examples, Applications)
+\newtcolorbox{examplebox}[1][]{
+    enhanced, breakable, colback=exampleGreen, colframe=exampleBorder,
+    fonttitle=\bfseries\sffamily, title=#1, boxrule=1.2pt, arc=4pt,
+    left=10pt, right=10pt, top=8pt, bottom=8pt
+}
+
+\titleformat{\section}{\Large\bfseries\sffamily}{\thesection}{1em}{}
+\titleformat{\subsection}{\large\bfseries\sffamily}{\thesubsection}{1em}{}
+
+\title{\vspace{-1.5cm}\Huge{\textbf{Quiz 2 复习冲刺讲义}}\\\vspace{0.8cm}\large{Classification 分类算法全考点梳理}}
+\author{}
+\date{}
+
+\begin{document}
+\maketitle
+\centerline{\rule{0.8\textwidth}{0.5pt}}
+\vspace{0.5cm}
+\noindent\textbf{\Large{最推荐的使用方式}}\\
+第一遍，只读\textbf{\textcolor{conclusionBorder}{蓝框"结论与直觉"}}和\textbf{\textcolor{stepBorder}{橙框"核心流程"}}；第二遍，结合\textbf{\textcolor{exampleBorder}{绿框"例题"}}把详细机制读懂。
+\vspace{1cm}
+\tableofcontents
+\newpage
+
+% ============================================================
+\section{分类基础概念}
+% ============================================================
+
+\begin{bluebox}[分类的核心目标]
+在机器学习中，\textbf{分类（Classification）}的目的是将输入数据\textbf{分配到预定义的类别标签}中。这与回归（预测连续数值）和聚类（无预定义标签的分组）有本质区别。
+\end{bluebox}
+
+\begin{orangebox}[分类 vs 回归 vs 聚类 --- 快速辨析]
+\begin{itemize}
+    \item \textbf{分类（Classification）}：有预定义标签，输出是离散类别（如：垃圾邮件/正常邮件）
+    \item \textbf{回归（Regression）}：预测连续数值（如：房价预测）
+    \item \textbf{聚类（Clustering）}：无预定义标签，自动分组（如：K-Means）
+\end{itemize}
+\end{orangebox}
+
+\begin{examplebox}[例题：分类问题识别]
+\textbf{Q:} 以下哪个是分类问题？\\
+a. 估算房屋价格 \quad b. 判断邮件是否为垃圾邮件 \quad c. 计算平方根 \quad d. 预测明天温度\\
+\textbf{A:} b。判断邮件是否为垃圾邮件是典型的二分类问题。
+\end{examplebox}
+
+% ============================================================
+\section{二分类与多分类}
+% ============================================================
+
+\begin{bluebox}[二分类与多分类]
+\textbf{二分类（Binary Classification）}只有两个可能的类别（如：是/否）。\\
+\textbf{多分类（Multi-class Classification）}涉及两个以上的类别（如：猫/狗/鸟）。
+\end{bluebox}
+
+\begin{examplebox}[例题：二分类的类别数]
+\textbf{Q:} 二分类中有多少个可能的类别？\\
+a. 一个 \quad b. 三个 \quad c. 两个 \quad d. 无限\\
+\textbf{A:} c。二分类的定义就是只有两个类别。
+\end{examplebox}
+
+\begin{examplebox}[例题：多分类定义]
+\textbf{Q:} 涉及超过两个类别的分类问题是什么类型？\\
+a. 多分类（Multi-class） \quad b. 回归 \quad c. 二分类 \quad d. 聚类\\
+\textbf{A:} a。超过两个类别就是多分类。
+\end{examplebox}
+
+% ============================================================
+\section{过拟合（Overfitting）}
+% ============================================================
+
+\begin{bluebox}[过拟合的本质]
+\textbf{过拟合}是指模型学习了训练数据中的\textbf{噪声和特定模式}，导致泛化能力下降。模型在训练集上表现很好，但在测试集上表现差。
+\end{bluebox}
+
+\begin{orangebox}[过拟合的特征]
+\begin{itemize}
+    \item 训练误差很低，测试误差很高
+    \item 模型过于复杂（参数过多）
+    \item 训练数据不足或噪声过多
+\end{itemize}
+\textbf{直觉：}就像学生死记硬背了练习题的答案，但考试换了数字就不会了。
+\end{orangebox}
+
+\begin{examplebox}[例题：过拟合的定义]
+\textbf{Q:} 过拟合意味着什么？\\
+a. 特征太少 \quad b. 训练和测试表现都好 \quad c. 未能捕获模式 \quad d. 学习了训练数据的噪声\\
+\textbf{A:} d。过拟合 = 学习了训练数据的噪声和特定模式，泛化能力差。
+\end{examplebox}
+
+% ============================================================
+\section{混淆矩阵（Confusion Matrix）}
+% ============================================================
+
+\begin{bluebox}[混淆矩阵的作用]
+\textbf{混淆矩阵}用于评估分类模型的性能，展示预测结果与真实标签的对比关系。
+\end{bluebox}
+
+\begin{orangebox}[混淆矩阵四象限]
+\begin{center}
+\begin{tabular}{l|c|c}
+ & \textbf{预测=正} & \textbf{预测=负} \\
+\hline
+\textbf{实际=正} & TP（真正例） & FN（假负例） \\
+\textbf{实际=负} & FP（假正例） & TN（真负例） \\
+\end{tabular}
+\end{center}
+
+\begin{itemize}
+    \item \textbf{TP (True Positive)}：正确分类的正例
+    \item \textbf{FP (False Positive)}：负例被错误分类为正例（"虚报"）
+    \item \textbf{FN (False Negative)}：正例被错误分类为负例（"漏报"）
+    \item \textbf{TN (True Negative)}：正确分类的负例
+\end{itemize}
+\end{orangebox}
+
+\begin{examplebox}[例题：False Positive 的含义]
+\textbf{Q:} 混淆矩阵中 FP 代表什么？\\
+a. 正确分类的正例 \quad b. 负例被错误分为正例 \quad c. 正确分类的负例 \quad d. 正例被错误分为负例\\
+\textbf{A:} b。FP = 负例被错误分类为正例。
+\end{examplebox}
+
+\begin{examplebox}[例题：混淆矩阵的作用]
+\textbf{Q:} 混淆矩阵的作用是？\\
+a. 可视化训练数据分布 \quad b. 降维 \quad c. 衡量回归误差 \quad d. 评估分类模型性能\\
+\textbf{A:} d。混淆矩阵是分类模型的性能评估工具。
+\end{examplebox}
+
+% ============================================================
+\section{特征缩放（Feature Scaling）}
+% ============================================================
+
+\begin{bluebox}[为什么需要特征缩放]
+\textbf{特征缩放}确保所有特征对分类过程的贡献\textbf{均等}。如果特征的量纲差异很大（如年龄 0-100 vs 收入 0-1000000），未缩放时大数值特征会主导模型。
+\end{bluebox}
+
+\begin{orangebox}[常见缩放方法]
+\begin{itemize}
+    \item \textbf{标准化（Standardization）}：$z = \frac{x - \mu}{\sigma}$，均值 0，标准差 1
+    \item \textbf{归一化（Normalization）}：$x' = \frac{x - x_{min}}{x_{max} - x_{min}}$，缩放到 $[0, 1]$
+\end{itemize}
+\end{orangebox}
+
+\begin{examplebox}[例题：特征缩放的目的]
+\textbf{Q:} 特征缩放的主要目的是？\\
+a. 提高可解释性 \quad b. 确保特征贡献均等 \quad c. 减少特征数 \quad d. 增加训练样本\\
+\textbf{A:} b。确保所有特征在分类过程中贡献均等。
+\end{examplebox}
+
+% ============================================================
+\section{常见分类算法}
+% ============================================================
+
+\subsection{支持向量机（SVM）}
+
+\begin{bluebox}[SVM 核心思想]
+SVM 通过寻找\textbf{最大间隔超平面}来分隔不同类别的数据。适用于\textbf{中小规模数据集}且类别之间有清晰边界的情况。
+\end{bluebox}
+
+\begin{examplebox}[例题：SVM 适用场景]
+\textbf{Q:} SVM 最适合什么场景？\\
+a. 中小数据集且类别边界清晰 \quad b. 非线性回归 \quad c. 聚类 \quad d. 缺失值数据\\
+\textbf{A:} a。SVM 在中小规模、有清晰类别边界的数据上表现最好。
+\end{examplebox}
+
+\subsection{逻辑回归（Logistic Regression）}
+
+\begin{bluebox}[逻辑回归的核心目的]
+\textbf{逻辑回归}的主要目的是\textbf{估计二元结果的概率}。它使用 Sigmoid 函数将线性回归的输出映射到 $[0, 1]$ 区间。
+\end{bluebox}
+
+\begin{orangebox}[逻辑回归的 Sigmoid 函数]
+$$P(y=1|x) = \sigma(z) = \frac{1}{1 + e^{-z}}$$
+其中 $z = w^T x + b$。\\
+当 $P \geq 0.5$ 时预测为正类，否则预测为负类。
+\end{orangebox}
+
+\begin{examplebox}[例题：逻辑回归的目的]
+\textbf{Q:} 逻辑回归的主要目的是？\\
+a. 估计二元结果的概率 \quad b. 预测连续值 \quad c. 聚类 \quad d. 降维\\
+\textbf{A:} a。逻辑回归本质上是概率估计模型。
+\end{examplebox}
+
+\subsection{概率与决策边界距离的深层关系}
+
+\begin{bluebox}[核心直觉：离边界越远，概率越极端]
+逻辑回归的输出 $\sigma(z)$ 中，$z = w^T x + b$ 是一个\textbf{线性打分}。\\
+$z = 0$ 的点恰好在决策边界上（$P=0.5$）；\\
+$|z|$ 越大，点离边界越远，预测概率越接近 0 或 1，模型越"自信"。
+\end{bluebox}
+
+\begin{orangebox}[Sigmoid 函数曲线图]
+\begin{center}
+\begin{tikzpicture}[scale=0.85]
+    % Axes
+    \draw[->] (-4.5,0) -- (4.5,0) node[right] {$z$};
+    \draw[->] (0,-0.3) -- (0,1.5) node[above] {$\sigma(z)$};
+    % Sigmoid curve
+    \draw[thick, conclusionBorder, domain=-4.2:4.2, samples=200, smooth]
+        plot (\x, {1/(1+exp(-\x))});
+    % Horizontal reference line at 0.5
+    \draw[dashed, gray] (-4.2,0.5) -- (4.2,0.5);
+    \node[gray] at (4.5,0.5) {\small$0.5$};
+    % Decision boundary marker
+    \draw[dashed, stepBorder] (0,0) -- (0,1);
+    \node[stepBorder, below] at (0,-0.1) {\small 边界 $z{=}0$};
+    % Left zone
+    \fill[conclusionBlue, opacity=0.4] (-4.2,0) rectangle (-1,1);
+    \node[conclusionBorder] at (-2.6, 1.2) {\small 远离边界 $\rightarrow$ $P{\approx}0$};
+    % Right zone
+    \fill[exampleGreen, opacity=0.4] (1,0) rectangle (4.2,1);
+    \node[exampleBorder] at (2.6, 1.2) {\small 远离边界 $\rightarrow$ $P{\approx}1$};
+    % Key points
+    \fill[stepBorder] (0,0.5) circle(2.5pt);
+    \node[stepBorder, above right] at (0.2,0.55) {\small$P{=}0.5$};
+    \fill[conclusionBorder] (-2, {1/(1+exp(2))}) circle(2pt);
+    \fill[exampleBorder] (2, {1/(1+exp(-2))}) circle(2pt);
+    % Distance annotation
+    \draw[<->, thick, red!70!black] (0,-0.6) -- (2,-0.6);
+    \node[red!70!black, below] at (1,-0.6) {\small 距离 $d = \frac{|z|}{\|w\|}$};
+    \draw[<->, thick, red!70!black] (-2,-0.6) -- (0,-0.6);
+\end{tikzpicture}
+\end{center}
+\end{orangebox}
+
+\begin{bluebox}[数学推导：距离与概率的桥梁]
+设决策边界为超平面 $w^T x + b = 0$，点 $x_0$ 到边界的欧氏距离为：
+$$d = \frac{|w^T x_0 + b|}{\|w\|} = \frac{|z|}{\|w\|}$$
+其中 $z = w^T x_0 + b$ 是线性打分。\\[6pt]
+\textbf{关键关系}：
+\begin{itemize}
+    \item $z = 0$ $\Rightarrow$ $d = 0$（在边界上）$\Rightarrow$ $\sigma(0) = 0.5$（最不确定）
+    \item $|z| \uparrow$ $\Rightarrow$ $d \uparrow$（远离边界）$\Rightarrow$ $\sigma(z) \to 0$ 或 $1$（越来越自信）
+    \item $\|w\|$ 越大，同样的 $|z|$ 对应的距离 $d$ 越小，但 Sigmoid 变化越陡峭
+\end{itemize}
+\end{bluebox}
+
+\begin{orangebox}[2D 特征空间中的决策边界可视化]
+\begin{center}
+\begin{tikzpicture}[scale=0.75]
+    % Axes
+    \draw[->] (-0.5,0) -- (5.5,0) node[right] {$x_1$};
+    \draw[->] (0,-0.5) -- (0,5.5) node[above] {$x_2$};
+    % Decision boundary: 2*x1 + x2 - 4 = 0 => x2 = -2*x1 + 4
+    \draw[thick, stepBorder, dashed] (-0.2,4.4) -- (5.2,-6.0);
+    \node[stepBorder, above] at (1.2,2.2) {\small 决策边界};
+    \node[stepBorder] at (1.2,1.6) {\small $2x_1{+}x_2{-}4{=}0$};
+    % Normal vector
+    \draw[->, very thick, red!70!black] (2,1) -- (3.2,1.6);
+    \node[red!70!black, right] at (3.2,1.6) {$\vec{w}$};
+    % Class + region
+    \fill[exampleGreen, opacity=0.25] (-0.2,4.4) -- (5.2,-6.0) -- (5.2,5.5) -- (-0.2,5.5) -- cycle;
+    \node[exampleBorder] at (4.2,4.8) {\small Class +};
+    % Class - region
+    \fill[conclusionBlue, opacity=0.25] (-0.2,4.4) -- (5.2,-6.0) -- (5.2,-0.5) -- (-0.2,-0.5) -- cycle;
+    \node[conclusionBorder] at (4.2,0.5) {\small Class $-$};
+    % Points
+    \fill[exampleBorder] (4,3) circle(3pt);
+    \node[right, exampleBorder] at (4.15,3) {\scriptsize $P{=}0.97$};
+    \fill[exampleBorder] (3,3) circle(3pt);
+    \node[right, exampleBorder] at (3.15,3) {\scriptsize $P{=}0.88$};
+    \fill[stepBorder] (2,0) circle(3pt);
+    \node[right, stepBorder] at (2.15,0) {\scriptsize $P{=}0.50$};
+    \fill[conclusionBorder] (4,0) circle(3pt);
+    \node[right, conclusionBorder] at (4.15,0) {\scriptsize $P{=}0.12$};
+    \fill[conclusionBorder] (4,-1.5) circle(3pt);
+    \node[right, conclusionBorder] at (4.15,-1.5) {\scriptsize $P{=}0.02$};
+    % Distance indicator
+    \draw[dotted, thick] (4,3) -- (2.4,0.8);
+    \node[rotate=-40, above, font=\scriptsize] at (3.4,1.7) {$d$};
+\end{tikzpicture}
+\end{center}
+\end{orangebox}
+
+\begin{examplebox}[生动例子：垃圾邮件分类]
+想象一个简单的邮件分类器，用两个特征：$x_1$ = "免费"出现次数，$x_2$ = 感叹号数量。\\[4pt]
+\begin{itemize}
+    \item 邮件 $x_1{=}5, x_2{=}8$：$z = 12$，$P = \sigma(12) \approx 0.999$\\
+    $\Rightarrow$ \textbf{远离边界}，模型几乎 100\% 确定是垃圾邮件
+    \item 邮件 $x_1{=}1, x_2{=}0$：$z = 0.2$，$P = \sigma(0.2) \approx 0.55$\\
+    $\Rightarrow$ \textbf{靠近边界}，模型只比抛硬币稍好一点
+\end{itemize}
+\vspace{4pt}
+\textbf{直觉}：离边界越远的邮件，特征越"极端"，模型判断越果断；边界附近的邮件特征不明显，模型也拿不准。
+\end{examplebox}
+
+\subsection{朴素贝叶斯（Na\"ive Bayes）}
+
+\begin{bluebox}[Na\"ive Bayes 的理论基础]
+\textbf{朴素贝叶斯}基于\textbf{贝叶斯定理}（Bayes' Theorem），假设各特征之间条件独立。
+$$P(y|x_1, ..., x_n) \propto P(y) \prod_{i=1}^{n} P(x_i|y)$$
+\end{bluebox}
+
+\begin{examplebox}[例题：基于贝叶斯定理的算法]
+\textbf{Q:} 以下哪个算法基于贝叶斯定理？\\
+a. KNN \quad b. 决策树 \quad c. 朴素贝叶斯 \quad d. 随机森林\\
+\textbf{A:} c。Na\"ive Bayes 直接基于贝叶斯定理。
+\end{examplebox}
+
+\subsection{神经网络分类器}
+
+\begin{bluebox}[激活函数的作用]
+在神经网络分类器中，\textbf{激活函数}的核心作用是引入\textbf{非线性}。没有激活函数，多层网络等价于单层线性变换，无法学习复杂模式。
+\end{bluebox}
+
+\begin{orangebox}[常见激活函数]
+\begin{itemize}
+    \item \textbf{Sigmoid}：$\sigma(x) = \frac{1}{1+e^{-x}}$，输出 $[0,1]$，常用于二分类输出层
+    \item \textbf{ReLU}：$f(x) = \max(0, x)$，最常用的隐藏层激活
+    \item \textbf{Softmax}：多分类输出层，将输出转为概率分布
+\end{itemize}
+\end{orangebox}
+
+\begin{examplebox}[例题：激活函数的作用]
+\textbf{Q:} 激活函数在神经网络中的主要作用是？\\
+a. 引入非线性 \quad b. 标准化输入 \quad c. 确定学习率 \quad d. 减少过拟合\\
+\textbf{A:} a。引入非线性是激活函数最核心的作用。
+\end{examplebox}
+
+\subsection{深度学习的优势}
+
+\begin{bluebox}[深度学习的关键优势]
+深度学习模型的关键优势是能从\textbf{原始数据中自动提取特征}，无需手动特征工程。
+\end{bluebox}
+
+\begin{examplebox}[例题：深度学习优势]
+\textbf{Q:} 深度学习的一个关键优势是？\\
+a. 总是可解释的 \quad b. 需要更少数据 \quad c. 计算成本低 \quad d. 自动提取特征\\
+\textbf{A:} d。深度学习能自动从原始数据中提取特征。
+\end{examplebox}
+
+% ============================================================
+\section{评估指标（Evaluation Metrics）}
+% ============================================================
+
+\begin{bluebox}[核心评估指标]
+\begin{itemize}
+    \item \textbf{Accuracy}（准确率）：$\frac{TP + TN}{TP + TN + FP + FN}$，正确预测的比例
+    \item \textbf{Precision}（精确率）：$\frac{TP}{TP + FP}$，预测为正的中有多少是真的正
+    \item \textbf{Recall}（召回率）：$\frac{TP}{TP + FN}$，所有正例中有多少被找到
+    \item \textbf{F1-score}：$\frac{2 \times Precision \times Recall}{Precision + Recall}$，精确率和召回率的调和平均
+\end{itemize}
+\end{bluebox}
+
+\begin{orangebox}[指标选择指南]
+\begin{itemize}
+    \item \textbf{数据均衡} $\rightarrow$ 用 Accuracy
+    \item \textbf{数据不均衡} $\rightarrow$ 用 F1-score（Accuracy 会失效）
+    \item \textbf{关注虚报}（如垃圾邮件过滤） $\rightarrow$ 关注 Precision
+    \item \textbf{关注漏报}（如疾病检测） $\rightarrow$ 关注 Recall
+\end{itemize}
+\end{orangebox}
+
+\begin{examplebox}[例题：综合指标]
+\textbf{Q:} 哪个指标同时考虑了精确率和召回率？\\
+a. R-squared \quad b. Accuracy \quad c. MAE \quad d. F1-score\\
+\textbf{A:} d。F1-score 是精确率和召回率的调和平均。
+\end{examplebox}
+
+\begin{examplebox}[例题：Accuracy 的缺陷]
+\textbf{Q:} 使用 Accuracy 的主要缺点是？\\
+a. 计算昂贵 \quad b. 不均衡数据集表现差 \quad c. 需要大数据集 \quad d. 需要特征缩放\\
+\textbf{A:} b。在不均衡数据集上，Accuracy 会产生误导（如 99\% 样本为负类时，全预测负就有 99\% 准确率但毫无意义）。
+\end{examplebox}
+
+\begin{examplebox}[例题：非分类指标]
+\textbf{Q:} 以下哪个指标通常不用在分类问题中？\\
+a. Precision \quad b. Accuracy \quad c. MSE \quad d. F1-score\\
+\textbf{A:} c。MSE（均方误差）是回归指标，不用于分类。
+\end{examplebox}
+
+% ============================================================
+\section{ROC 曲线}
+% ============================================================
+
+\begin{bluebox}[ROC 曲线的含义]
+\textbf{ROC 曲线}（Receiver Operating Characteristic）展示了\textbf{真正率（TPR）与假正率（FPR）之间的权衡关系}。\\
+其中 $TPR = Recall = \frac{TP}{TP+FN}$，$FPR = \frac{FP}{FP+TN}$。
+\end{bluebox}
+
+\begin{orangebox}[ROC 曲线解读]
+\begin{itemize}
+    \item 曲线越靠近左上角，模型越好
+    \item \textbf{AUC}（曲线下面积）越接近 1 越好
+    \item 对角线（AUC=0.5）= 随机猜测
+\end{itemize}
+\end{orangebox}
+
+\begin{examplebox}[例题：ROC 曲线展示的内容]
+\textbf{Q:} ROC 曲线展示了什么？\\
+a. 特征重要性 \quad b. 精确率与召回率的关系 \quad c. TPR 与 FPR 的权衡 \quad d. 回归误差\\
+\textbf{A:} c。ROC 展示的是真正率（TPR）和假正率（FPR）的权衡。
+\end{examplebox}
+
+% ============================================================
+\section{决策边界（Decision Boundary）}
+% ============================================================
+
+\begin{bluebox}[决策边界的作用]
+\textbf{决策边界}用于在特征空间中\textbf{分隔不同类别}。它是模型做出分类决策的"分界线"。
+\end{bluebox}
+
+\begin{examplebox}[例题：决策边界]
+\textbf{Q:} 决策边界的用途是？\\
+a. 数据降维 \quad b. 预测数值 \quad c. 分隔不同类别 \quad d. 确定缺失值\\
+\textbf{A:} c。决策边界在特征空间中分隔不同类别。
+\end{examplebox}
+
+% ============================================================
+\section{处理不均衡数据集}
+% ============================================================
+
+\begin{bluebox}[不均衡数据集的挑战]
+当正负样本比例严重失衡时（如 1:100），多数类会主导模型训练，少数类容易被忽略。
+\end{bluebox}
+
+\begin{orangebox}[处理不均衡数据的方法]
+\begin{itemize}
+    \item \textbf{过采样（Oversampling）}少数类：如 SMOTE 算法
+    \item \textbf{欠采样（Undersampling）}多数类
+    \item 调整类别权重（class weights）
+    \item 使用 F1-score 而非 Accuracy 评估
+\end{itemize}
+\end{orangebox}
+
+\begin{examplebox}[例题：处理不均衡数据]
+\textbf{Q:} 如何处理不均衡数据集？\\
+a. 降低学习率 \quad b. 过采样少数类 \quad c. 减少训练轮数 \quad d. 增加特征数\\
+\textbf{A:} b。过采样少数类是处理不均衡数据的经典方法。
+\end{examplebox}
+
+% ============================================================
+\section{算法辨析速查表}
+% ============================================================
+
+\begin{orangebox}[常用分类算法速查]
+\begin{center}
+\begin{tabular}{lll}
+\textbf{算法} & \textbf{核心原理} & \textbf{适用场景} \\
+\hline
+逻辑回归 & Sigmoid + 线性组合 & 简单二分类，可解释性要求高 \\
+SVM & 最大间隔超平面 & 中小数据集，清晰边界 \\
+朴素贝叶斯 & 贝叶斯定理 + 条件独立 & 文本分类，小样本 \\
+决策树 & 信息增益/基尼系数分裂 & 可解释性要求高 \\
+随机森林 & 多棵决策树集成 & 几乎所有场景 \\
+神经网络 & 多层非线性变换 & 大数据，复杂模式 \\
+深度学习 & 自动特征提取 + 端到端学习 & 图像、语音、NLP \\
+\end{tabular}
+\end{center}
+\end{orangebox}
+
+\end{document}
