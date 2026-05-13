@@ -19,7 +19,7 @@ Converts **problem sets** (PDF/PPTX) into a professional **solution manual** wit
 | Cover & Overview | Detailed Solutions | Knowledge Summary |
 |:---:|:---:|:---:|
 | ![page1](exerpaper/examples/page1.jpg) | ![page2](exerpaper/examples/page2.jpg) | ![page6](exerpaper/examples/page6.jpg) |
-| *封面 + 题目总览* | *逐步详细解答* | *知识点总结框* |
+| *overview* | *detailed solution* | *summery * |
 
 ---
 
@@ -38,7 +38,7 @@ Converts **lecture slides / quiz reviews** (PPTX or PDF) into a structured **exa
 | Title & TOC | Concept Boxes | Diagrams & Examples |
 |:---:|:---:|:---:|
 | ![page1](testpraper/examples/page1.jpg) | ![page3](testpraper/examples/page3.jpg) | ![page11](testpraper/examples/page11.jpg) |
-| *封面 + 目录* | *蓝/橙/绿三色信息框* | *TikZ 图解 + 例题* |
+| *frontpage* | *information on knowledge* | *TikZ solution +example exercise* |
 
 ---
 
